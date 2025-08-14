@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>音频感知判断实验_word</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+       .trial {
+            display: none;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+       .trial.active {
+            display: block;
+        }
+       .trial-item {
+            display: none;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+       .trial-item.active {
+            display: block;
+        }
+       .question-block {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+       .question {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+       .btn {
+            background-color: #ddd;
+            color: black;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 1em;
+        }
+       .btn.active {
+            background-color: #45a049;
+            color: white;
+        }
+       .btn:hover {
+            background-color: #aaa;
+        }
+       .btn.active:hover {
+            background-color: #45a049;
+            color: white;
+        }
+       .slider-group {
+            margin: 20px 0;
+        }
+       .radio-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 0.9em;
+            flex-wrap: wrap;
+        }
+       .radio-group label {
+            margin: 0 5px;
+            display: flex;
+            align-items: center;
+        }
+       .radio-group input {
+            margin-right: 5px;
+        }
+        form p {
+            margin: 15px 0;
+        }
+        input[type="text"] {
+            padding: 8px;
+            width: 300px;
+            box-sizing: border-box;
+        }
+       .audio-container {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e9f7ef;
+            border-radius: 8px;
+        }
+       .trial-navigation {
+            margin: 40px 0;
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+       .input-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+       .error-message {
+            color: #ff0000;
+            margin: 10px 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- 初始页面 -->
+    <div id="intro" class="trial active">
+        <h2>音频感知判断实验</h2>
+        <p>欢迎参加本次实验，请输入您的姓名和编号，并点击“开始实验”。</p>
+        <div class="error-message" id="info-error">请输入姓名和编号</div>
+        <div class="input-section">
+            <p><label for="participant_name">姓名：</label><input type="text" id="participant_name"></p>
+            <p><label for="participant_id">编号：</label><input type="text" id="participant_id"></p>
+        </div>
+        <div class="trial-navigation">
+            <button class="btn" onclick="startExperiment()">开始实验</button>
+        </div>
+    </div>
+
+    <!-- 实验说明页面 -->
+    <div id="welcome" class="trial">
+        <h2>实验说明</h2>
+        <p>请仔细聆听每个音频，并根据你的感受回答页面上的所有问题。</p>
+        <p>音频会自动播放一次，<b>你最多可以再播放一次</b>。</p>
+        <p>请根据实际感受作答，无需过度思考。</p>
+        <div class="trial-navigation">
+            <button class="btn" onclick="initTrials()">进入实验</button>
+        </div>
+    </div>
+
+    <!-- 结束页面 -->
+    <div id="finish" class="trial">
+        <h2>实验结束</h2>
+        <p>感谢你的参与！</p>
+        <p>点击下方按钮下载你的回答数据（CSV格式）。</p>
+        <button class="btn" onclick="downloadCSV()">下载数据</button>
+        <div id="results" style="margin-top: 30px;"></div>
+    </div>
+
+    <script>
+        const config = {
+            audioFiles: [
+                "audio/word/f01_word001_1.wav",
+                "audio/word/f01_word001_2.wav",
+                "audio/word/f01_word002_1.wav",
+                "audio/word/f01_word002_2.wav",
+                "audio/word/f01_special_word003_1.wav",
+                "audio/word/f01_special_word003_2.wav",
+                "audio/word/f01_special_word004_1.wav",
+                "audio/word/f01_special_word004_2.wav",
+                "audio/word/f01_word005_1.wav",
+                "audio/word/f01_word005_2.wav",
+                "audio/word/f01_special_word006_1.wav",
+                "audio/word/f01_special_word006_2.wav",
+                "audio/word/f01_word007_1.wav",
+                "audio/word/f01_word007_2.wav",
+                "audio/word/f01_word008_1.wav",
+                "audio/word/f01_word008_2.wav",
+                "audio/word/f01_word009_1.wav",
+                "audio/word/f01_word009_2.wav",
+                "audio/word/f01_word010_1.wav",
+                "audio/word/f01_word010_2.wav",
+                "audio/word/f01_word011_1.wav",
+                "audio/word/f01_word011_2.wav",
+                "audio/word/f01_word012_1.wav",
+                "audio/word/f01_word012_2.wav",
+                "audio/word/f01_word013_1.wav",
+                "audio/word/f01_word013_2.wav",
+                "audio/word/f01_special_word014_1.wav",
+                "audio/word/f01_special_word014_2.wav",
+                "audio/word/f01_word015_1.wav",
+                "audio/word/f01_word015_2.wav",
+                "audio/word/f01_word016_1.wav",
+                "audio/word/f01_word016_2.wav",
+                "audio/word/f01_word017_1.wav",
+                "audio/word/f01_word017_2.wav",
+                "audio/word/f01_special_word018_1.wav",
+                "audio/word/f01_special_word018_2.wav",
+                "audio/word/f01_word019_1.wav",
+                "audio/word/f01_word019_2.wav",
+                "audio/word/f01_word020_1.wav",
+                "audio/word/f01_word020_2.wav",
+                "audio/word/f01_special_word021_1.wav",
+                "audio/word/f01_special_word021_2.wav",
+                "audio/word/f01_word022_1.wav",
+                "audio/word/f01_word022_2.wav",
+                "audio/word/f01_word023_1.wav",
+                "audio/word/f01_word023_2.wav",
+                "audio/word/f01_word024_1.wav",
+                "audio/word/f01_word024_2.wav",
+                "audio/word/f01_word025_1.wav",
+                "audio/word/f01_word025_2.wav",
+                "audio/word/f01_word026_1.wav",
+                "audio/word/f01_word026_2.wav",
+                "audio/word/f01_word027_1.wav",
+                "audio/word/f01_word027_2.wav",
+                "audio/word/f01_word028_1.wav",
+                "audio/word/f01_word028_2.wav",
+                "audio/word/f01_word029_1.wav",
+                "audio/word/f01_word029_2.wav",
+                "audio/word/f01_word030_1.wav",
+                "audio/word/f01_word030_2.wav",
+                "audio/word/f01_word031_1.wav",
+                "audio/word/f01_word031_2.wav",
+                "audio/word/f01_special_word032_1.wav",
+                "audio/word/f01_special_word032_2.wav",
+                "audio/word/f01_special_word033_1.wav",
+                "audio/word/f01_special_word033_2.wav",
+                "audio/word/f01_word034_1.wav",
+                "audio/word/f01_word034_2.wav",
+                "audio/word/f01_word035_1.wav",
+                "audio/word/f01_word035_2.wav",
+                "audio/word/f01_word036_1.wav",
+                "audio/word/f01_word036_2.wav",
+                "audio/word/f01_word037_1.wav",
+                "audio/word/f01_word037_2.wav",
+                "audio/word/f01_word038_1.wav",
+                "audio/word/f01_word038_2.wav",
+                "audio/word/f01_word039_1.wav",
+                "audio/word/f01_word039_2.wav",
+                "audio/word/f01_word040_1.wav",
+                "audio/word/f01_word040_2.wav",
+                "audio/word/f01_word041_1.wav",
+                "audio/word/f01_word041_2.wav",
+                "audio/word/f01_word042_1.wav",
+                "audio/word/f01_word042_2.wav",
+                "audio/word/f01_word043_1.wav",
+                "audio/word/f01_word043_2.wav",
+                "audio/word/f01_word044_1.wav",
+                "audio/word/f01_word044_2.wav",
+                "audio/word/f01_word045_1.wav",
+                "audio/word/f01_word045_2.wav",
+                "audio/word/f01_word046_1.wav",
+                "audio/word/f01_word046_2.wav",
+                "audio/word/f01_word047_1.wav",
+                "audio/word/f01_word047_2.wav",
+                "audio/word/f01_word048_1.wav",
+                "audio/word/f01_word048_2.wav",
+                "audio/word/f01_word049_1.wav",
+                "audio/word/f01_word049_2.wav",
+                "audio/word/f01_word050_1.wav",
+                "audio/word/f01_word050_2.wav",
+                "audio/word/f01_word051_1.wav",
+                "audio/word/f01_word051_2.wav",
+                "audio/word/f01_word052_1.wav",
+                "audio/word/f01_word052_2.wav",
+                "audio/word/f01_word053_1.wav",
+                "audio/word/f01_word053_2.wav",
+                "audio/word/f01_word054_1.wav",
+                "audio/word/f01_word054_2.wav",
+                "audio/word/f01_word055_1.wav",
+                "audio/word/f01_word055_2.wav",
+                "audio/word/f01_word056_1.wav",
+                "audio/word/f01_word056_2.wav",
+                "audio/word/f01_word057_1.wav",
+                "audio/word/f01_word057_2.wav",
+                "audio/word/f01_word058_1.wav",
+                "audio/word/f01_word058_2.wav",
+                "audio/word/f01_special_word059_1.wav",
+                "audio/word/f01_special_word059_2.wav",
+                "audio/word/f01_word060_1.wav",
+                "audio/word/f01_word060_2.wav",
+                "audio/word/f01_word061_1.wav",
+                "audio/word/f01_word061_2.wav",
+                "audio/word/f01_special_word062_1.wav",
+                "audio/word/f01_special_word062_2.wav",
+                "audio/word/f01_word063_1.wav",
+                "audio/word/f01_word063_2.wav",
+                "audio/word/f01_word064_1.wav",
+                "audio/word/f01_word064_2.wav",
+                "audio/word/f02_word001_1.wav",
+                "audio/word/f02_word001_2.wav",
+                "audio/word/f02_word002_1.wav",
+                "audio/word/f02_word002_2.wav",
+                "audio/word/f02_special_word003_1.wav",
+                "audio/word/f02_special_word003_2.wav",
+                "audio/word/f02_special_word004_1.wav",
+                "audio/word/f02_special_word004_2.wav",
+                "audio/word/f02_word005_1.wav",
+                "audio/word/f02_word005_2.wav",
+                "audio/word/f02_special_word006_1.wav",
+                "audio/word/f02_special_word006_2.wav",
+                "audio/word/f02_word007_1.wav",
+                "audio/word/f02_word007_2.wav",
+                "audio/word/f02_word008_1.wav",
+                "audio/word/f02_word008_2.wav",
+                "audio/word/f02_word009_1.wav",
+                "audio/word/f02_word009_2.wav",
+                "audio/word/f02_word010_1.wav",
+                "audio/word/f02_word010_2.wav",
+                "audio/word/f02_word011_1.wav",
+                "audio/word/f02_word011_2.wav",
+                "audio/word/f02_word012_1.wav",
+                "audio/word/f02_word012_2.wav",
+                "audio/word/f02_word013_1.wav",
+                "audio/word/f02_word013_2.wav",
+                "audio/word/f02_special_word014_1.wav",
+                "audio/word/f02_special_word014_2.wav",
+                "audio/word/f02_word015_1.wav",
+                "audio/word/f02_word015_2.wav",
+                "audio/word/f02_word016_1.wav",
+                "audio/word/f02_word016_2.wav",
+                "audio/word/f02_word017_1.wav",
+                "audio/word/f02_word017_2.wav",
+                "audio/word/f02_special_word018_1.wav",
+                "audio/word/f02_special_word018_2.wav",
+                "audio/word/f02_word019_1.wav",
+                "audio/word/f02_word019_2.wav",
+                "audio/word/f02_word020_1.wav",
+                "audio/word/f02_word020_2.wav",
+                "audio/word/f02_special_word021_1.wav",
+                "audio/word/f02_special_word021_2.wav",
+                "audio/word/f02_word022_1.wav",
+                "audio/word/f02_word022_2.wav",
+                "audio/word/f02_word023_1.wav",
+                "audio/word/f02_word023_2.wav",
+                "audio/word/f02_word024_1.wav",
+                "audio/word/f02_word024_2.wav",
+                "audio/word/f02_word025_1.wav",
+                "audio/word/f02_word025_2.wav",
+                "audio/word/f02_word026_1.wav",
+                "audio/word/f02_word026_2.wav",
+                "audio/word/f02_word027_1.wav",
+                "audio/word/f02_word027_2.wav",
+                "audio/word/f02_word028_1.wav",
+                "audio/word/f02_word028_2.wav",
+                "audio/word/f02_word029_1.wav",
+                "audio/word/f02_word029_2.wav",
+                "audio/word/f02_word030_1.wav",
+                "audio/word/f02_word030_2.wav",
+                "audio/word/f02_word031_1.wav",
+                "audio/word/f02_word031_2.wav",
+                "audio/word/f02_special_word032_1.wav",
+                "audio/word/f02_special_word032_2.wav",
+                "audio/word/f02_special_word033_1.wav",
+                "audio/word/f02_special_word033_2.wav",
+                "audio/word/f02_word034_1.wav",
+                "audio/word/f02_word034_2.wav",
+                "audio/word/f02_word035_1.wav",
+                "audio/word/f02_word035_2.wav",
+                "audio/word/f02_word036_1.wav",
+                "audio/word/f02_word036_2.wav",
+                "audio/word/f02_word037_1.wav",
+                "audio/word/f02_word037_2.wav",
+                "audio/word/f02_word038_1.wav",
+                "audio/word/f02_word038_2.wav",
+                "audio/word/f02_word039_1.wav",
+                "audio/word/f02_word039_2.wav",
+                "audio/word/f02_word040_1.wav",
+                "audio/word/f02_word040_2.wav",
+                "audio/word/f02_word041_1.wav",
+                "audio/word/f02_word041_2.wav",
+                "audio/word/f02_word042_1.wav",
+                "audio/word/f02_word042_2.wav",
+                "audio/word/f02_word043_1.wav",
+                "audio/word/f02_word043_2.wav",
+                "audio/word/f02_word044_1.wav",
+                "audio/word/f02_word044_2.wav",
+                "audio/word/f02_word045_1.wav",
+                "audio/word/f02_word045_2.wav",
+                "audio/word/f02_word046_1.wav",
+                "audio/word/f02_word046_2.wav",
+                "audio/word/f02_word047_1.wav",
+                "audio/word/f02_word047_2.wav",
+                "audio/word/f02_word048_1.wav",
+                "audio/word/f02_word048_2.wav",
+                "audio/word/f02_word049_1.wav",
+                "audio/word/f02_word049_2.wav",
+                "audio/word/f02_word050_1.wav",
+                "audio/word/f02_word050_2.wav",
+                "audio/word/f02_word051_1.wav",
+                "audio/word/f02_word051_2.wav",
+                "audio/word/f02_word052_1.wav",
+                "audio/word/f02_word052_2.wav",
+                "audio/word/f02_word053_1.wav",
+                "audio/word/f02_word053_2.wav",
+                "audio/word/f02_word054_1.wav",
+                "audio/word/f02_word054_2.wav",
+                "audio/word/f02_word055_1.wav",
+                "audio/word/f02_word055_2.wav",
+                "audio/word/f02_word056_1.wav",
+                "audio/word/f02_word056_2.wav",
+                "audio/word/f02_word057_1.wav",
+                "audio/word/f02_word057_2.wav",
+                "audio/word/f02_word058_1.wav",
+                "audio/word/f02_word058_2.wav",
+                "audio/word/f02_special_word059_1.wav",
+                "audio/word/f02_special_word059_2.wav",
+                "audio/word/f02_word060_1.wav",
+                "audio/word/f02_word060_2.wav",
+                "audio/word/f02_word061_1.wav",
+                "audio/word/f02_word061_2.wav",
+                "audio/word/f02_special_word062_1.wav",
+                "audio/word/f02_special_word062_2.wav",
+                "audio/word/f02_word063_1.wav",
+                "audio/word/f02_word063_2.wav",
+                "audio/word/f02_word064_1.wav",
+                "audio/word/f02_word064_2.wav",
+                "audio/word/m01_word001_1.wav",
+                "audio/word/m01_word001_2.wav",
+                "audio/word/m01_word002_1.wav",
+                "audio/word/m01_word002_2.wav",
+                "audio/word/m01_special_word003_1.wav",
+                "audio/word/m01_special_word003_2.wav",
+                "audio/word/m01_special_word004_1.wav",
+                "audio/word/m01_special_word004_2.wav",
+                "audio/word/m01_word005_1.wav",
+                "audio/word/m01_word005_2.wav",
+                "audio/word/m01_special_word006_1.wav",
+                "audio/word/m01_special_word006_2.wav",
+                "audio/word/m01_word007_1.wav",
+                "audio/word/m01_word007_2.wav",
+                "audio/word/m01_word008_1.wav",
+                "audio/word/m01_word008_2.wav",
+                "audio/word/m01_word009_1.wav",
+                "audio/word/m01_word009_2.wav",
+                "audio/word/m01_word010_1.wav",
+                "audio/word/m01_word010_2.wav",
+                "audio/word/m01_word011_1.wav",
+                "audio/word/m01_word011_2.wav",
+                "audio/word/m01_word012_1.wav",
+                "audio/word/m01_word012_2.wav",
+                "audio/word/m01_word013_1.wav",
+                "audio/word/m01_word013_2.wav",
+                "audio/word/m01_special_word014_1.wav",
+                "audio/word/m01_special_word014_2.wav",
+                "audio/word/m01_word015_1.wav",
+                "audio/word/m01_word015_2.wav",
+                "audio/word/m01_word016_1.wav",
+                "audio/word/m01_word016_2.wav",
+                "audio/word/m01_word017_1.wav",
+                "audio/word/m01_word017_2.wav",
+                "audio/word/m01_special_word018_1.wav",
+                "audio/word/m01_special_word018_2.wav",
+                "audio/word/m01_word019_1.wav",
+                "audio/word/m01_word019_2.wav",
+                "audio/word/m01_word020_1.wav",
+                "audio/word/m01_word020_2.wav",
+                "audio/word/m01_special_word021_1.wav",
+                "audio/word/m01_special_word021_2.wav",
+                "audio/word/m01_word022_1.wav",
+                "audio/word/m01_word022_2.wav",
+                "audio/word/m01_word023_1.wav",
+                "audio/word/m01_word023_2.wav",
+                "audio/word/m01_word024_1.wav",
+                "audio/word/m01_word024_2.wav",
+                "audio/word/m01_word025_1.wav",
+                "audio/word/m01_word025_2.wav",
+                "audio/word/m01_word026_1.wav",
+                "audio/word/m01_word026_2.wav",
+                "audio/word/m01_word027_1.wav",
+                "audio/word/m01_word027_2.wav",
+                "audio/word/m01_word028_1.wav",
+                "audio/word/m01_word028_2.wav",
+                "audio/word/m01_word029_1.wav",
+                "audio/word/m01_word029_2.wav",
+                "audio/word/m01_word030_1.wav",
+                "audio/word/m01_word030_2.wav",
+                "audio/word/m01_word031_1.wav",
+                "audio/word/m01_word031_2.wav",
+                "audio/word/m01_special_word032_1.wav",
+                "audio/word/m01_special_word032_2.wav",
+                "audio/word/m01_special_word033_1.wav",
+                "audio/word/m01_special_word033_2.wav",
+                "audio/word/m01_word034_1.wav",
+                "audio/word/m01_word034_2.wav",
+                "audio/word/m01_word035_1.wav",
+                "audio/word/m01_word035_2.wav",
+                "audio/word/m01_word036_1.wav",
+                "audio/word/m01_word036_2.wav",
+                "audio/word/m01_word037_1.wav",
+                "audio/word/m01_word037_2.wav",
+                "audio/word/m01_word038_1.wav",
+                "audio/word/m01_word038_2.wav",
+                "audio/word/m01_word039_1.wav",
+                "audio/word/m01_word039_2.wav",
+                "audio/word/m01_word040_1.wav",
+                "audio/word/m01_word040_2.wav",
+                "audio/word/m01_word041_1.wav",
+                "audio/word/m01_word041_2.wav",
+                "audio/word/m01_word042_1.wav",
+                "audio/word/m01_word042_2.wav",
+                "audio/word/m01_word043_1.wav",
+                "audio/word/m01_word043_2.wav",
+                "audio/word/m01_word044_1.wav",
+                "audio/word/m01_word044_2.wav",
+                "audio/word/m01_word045_1.wav",
+                "audio/word/m01_word045_2.wav",
+                "audio/word/m01_word046_1.wav",
+                "audio/word/m01_word046_2.wav",
+                "audio/word/m01_word047_1.wav",
+                "audio/word/m01_word047_2.wav",
+                "audio/word/m01_word048_1.wav",
+                "audio/word/m01_word048_2.wav",
+                "audio/word/m01_word049_1.wav",
+                "audio/word/m01_word049_2.wav",
+                "audio/word/m01_word050_1.wav",
+                "audio/word/m01_word050_2.wav",
+                "audio/word/m01_word051_1.wav",
+                "audio/word/m01_word051_2.wav",
+                "audio/word/m01_word052_1.wav",
+                "audio/word/m01_word052_2.wav",
+                "audio/word/m01_word053_1.wav",
+                "audio/word/m01_word053_2.wav",
+                "audio/word/m01_word054_1.wav",
+                "audio/word/m01_word054_2.wav",
+                "audio/word/m01_word055_1.wav",
+                "audio/word/m01_word055_2.wav",
+                "audio/word/m01_word056_1.wav",
+                "audio/word/m01_word056_2.wav",
+                "audio/word/m01_word057_1.wav",
+                "audio/word/m01_word057_2.wav",
+                "audio/word/m01_word058_1.wav",
+                "audio/word/m01_word058_2.wav",
+                "audio/word/m01_special_word059_1.wav",
+                "audio/word/m01_special_word059_2.wav",
+                "audio/word/m01_word060_1.wav",
+                "audio/word/m01_word060_2.wav",
+                "audio/word/m01_word061_1.wav",
+                "audio/word/m01_word061_2.wav",
+                "audio/word/m01_special_word062_1.wav",
+                "audio/word/m01_special_word062_2.wav",
+                "audio/word/m01_word063_1.wav",
+                "audio/word/m01_word063_2.wav",
+                "audio/word/m01_word064_1.wav",
+                "audio/word/m01_word064_2.wav",
+                "audio/word/m02_word001_1.wav",
+                "audio/word/m02_word001_2.wav",
+                "audio/word/m02_word002_1.wav",
+                "audio/word/m02_word002_2.wav",
+                "audio/word/m02_special_word003_1.wav",
+                "audio/word/m02_special_word003_2.wav",
+                "audio/word/m02_special_word004_1.wav",
+                "audio/word/m02_special_word004_2.wav",
+                "audio/word/m02_word005_1.wav",
+                "audio/word/m02_word005_2.wav",
+                "audio/word/m02_special_word006_1.wav",
+                "audio/word/m02_special_word006_2.wav",
+                "audio/word/m02_word007_1.wav",
+                "audio/word/m02_word007_2.wav",
+                "audio/word/m02_word008_1.wav",
+                "audio/word/m02_word008_2.wav",
+                "audio/word/m02_word009_1.wav",
+                "audio/word/m02_word009_2.wav",
+                "audio/word/m02_word010_1.wav",
+                "audio/word/m02_word010_2.wav",
+                "audio/word/m02_word011_1.wav",
+                "audio/word/m02_word011_2.wav",
+                "audio/word/m02_word012_1.wav",
+                "audio/word/m02_word012_2.wav",
+                "audio/word/m02_word013_1.wav",
+                "audio/word/m02_word013_2.wav",
+                "audio/word/m02_special_word014_1.wav",
+                "audio/word/m02_special_word014_2.wav",
+                "audio/word/m02_word015_1.wav",
+                "audio/word/m02_word015_2.wav",
+                "audio/word/m02_word016_1.wav",
+                "audio/word/m02_word016_2.wav",
+                "audio/word/m02_word017_1.wav",
+                "audio/word/m02_word017_2.wav",
+                "audio/word/m02_special_word018_1.wav",
+                "audio/word/m02_special_word018_2.wav",
+                "audio/word/m02_word019_1.wav",
+                "audio/word/m02_word019_2.wav",
+                "audio/word/m02_word020_1.wav",
+                "audio/word/m02_word020_2.wav",
+                "audio/word/m02_special_word021_1.wav",
+                "audio/word/m02_special_word021_2.wav",
+                "audio/word/m02_word022_1.wav",
+                "audio/word/m02_word022_2.wav",
+                "audio/word/m02_word023_1.wav",
+                "audio/word/m02_word023_2.wav",
+                "audio/word/m02_word024_1.wav",
+                "audio/word/m02_word024_2.wav",
+                "audio/word/m02_word025_1.wav",
+                "audio/word/m02_word025_2.wav",
+                "audio/word/m02_word026_1.wav",
+                "audio/word/m02_word026_2.wav",
+                "audio/word/m02_word027_1.wav",
+                "audio/word/m02_word027_2.wav",
+                "audio/word/m02_word028_1.wav",
+                "audio/word/m02_word028_2.wav",
+                "audio/word/m02_word029_1.wav",
+                "audio/word/m02_word029_2.wav",
+                "audio/word/m02_word030_1.wav",
+                "audio/word/m02_word030_2.wav",
+                "audio/word/m02_word031_1.wav",
+                "audio/word/m02_word031_2.wav",
+                "audio/word/m02_special_word032_1.wav",
+                "audio/word/m02_special_word032_2.wav",
+                "audio/word/m02_special_word033_1.wav",
+                "audio/word/m02_special_word033_2.wav",
+                "audio/word/m02_word034_1.wav",
+                "audio/word/m02_word034_2.wav",
+                "audio/word/m02_word035_1.wav",
+                "audio/word/m02_word035_2.wav",
+                "audio/word/m02_word036_1.wav",
+                "audio/word/m02_word036_2.wav",
+                "audio/word/m02_word037_1.wav",
+                "audio/word/m02_word037_2.wav",
+                "audio/word/m02_word038_1.wav",
+                "audio/word/m02_word038_2.wav",
+                "audio/word/m02_word039_1.wav",
+                "audio/word/m02_word039_2.wav",
+                "audio/word/m02_word040_1.wav",
+                "audio/word/m02_word040_2.wav",
+                "audio/word/m02_word041_1.wav",
+                "audio/word/m02_word041_2.wav",
+                "audio/word/m02_word042_1.wav",
+                "audio/word/m02_word042_2.wav",
+                "audio/word/m02_word043_1.wav",
+                "audio/word/m02_word043_2.wav",
+                "audio/word/m02_word044_1.wav",
+                "audio/word/m02_word044_2.wav",
+                "audio/word/m02_word045_1.wav",
+                "audio/word/m02_word045_2.wav",
+                "audio/word/m02_word046_1.wav",
+                "audio/word/m02_word046_2.wav",
+                "audio/word/m02_word047_1.wav",
+                "audio/word/m02_word047_2.wav",
+                "audio/word/m02_word048_1.wav",
+                "audio/word/m02_word048_2.wav",
+                "audio/word/m02_word049_1.wav",
+                "audio/word/m02_word049_2.wav",
+                "audio/word/m02_word050_1.wav",
+                "audio/word/m02_word050_2.wav",
+                "audio/word/m02_word051_1.wav",
+                "audio/word/m02_word051_2.wav",
+                "audio/word/m02_word052_1.wav",
+                "audio/word/m02_word052_2.wav",
+                "audio/word/m02_word053_1.wav",
+                "audio/word/m02_word053_2.wav",
+                "audio/word/m02_word054_1.wav",
+                "audio/word/m02_word054_2.wav",
+                "audio/word/m02_word055_1.wav",
+                "audio/word/m02_word055_2.wav",
+                "audio/word/m02_word056_1.wav",
+                "audio/word/m02_word056_2.wav",
+                "audio/word/m02_word057_1.wav",
+                "audio/word/m02_word057_2.wav",
+                "audio/word/m02_word058_1.wav",
+                "audio/word/m02_word058_2.wav",
+                "audio/word/m02_special_word059_1.wav",
+                "audio/word/m02_special_word059_2.wav",
+                "audio/word/m02_word060_1.wav",
+                "audio/word/m02_word060_2.wav",
+                "audio/word/m02_word061_1.wav",
+                "audio/word/m02_word061_2.wav",
+                "audio/word/m02_special_word062_1.wav",
+                "audio/word/m02_special_word062_2.wav",
+                "audio/word/m02_word063_1.wav",
+                "audio/word/m02_word063_2.wav",
+                "audio/word/m02_word064_1.wav",
+                "audio/word/m02_word064_2.wav"
+            ],
+            specialAudioKeyword: "_special_",
+            currentTrial: 0,
+            experimentData: [],
+            participantName: '',
+            participantId: ''
+        };
+
+        // 辅助函数：创建单选框组
+        function createRadioGroup(name, min, max) {
+            let html = '<div class="radio-group">';
+            for (let i = min; i <= max; i++) {
+                html += `<label><input type="radio" name="${name}" value="${i}">${i}</label>`;
+            }
+            html += '</div>';
+            return html;
+        }
+
+        // 辅助函数：创建问题块
+        function createQuestionBlock(questionText, buttons, btnClass, extraContent = "") {
+            const block = document.createElement('div');
+            block.className = 'question-block';
+            
+            // 问题文本
+            const question = document.createElement('div');
+            question.className = 'question';
+            question.textContent = questionText;
+            block.appendChild(question);
+            
+            // 按钮组
+            buttons.forEach(btnText => {
+                const btn = document.createElement('button');
+                btn.className = `btn ${btnClass}`;
+                btn.dataset.value = btnText;
+                btn.textContent = btnText;
+                block.appendChild(btn);
+            });
+            
+            // 额外内容（评分项）
+            if (extraContent) {
+                const extraDiv = document.createElement('div');
+                extraDiv.innerHTML = extraContent;
+                block.appendChild(extraDiv);
+            }
+            
+            return block;
+        }
+
+        // 动态创建试次
+        function createTrials(index) {
+            // 清除已有试次
+            document.querySelectorAll('[id^="trial-"]').forEach(el => el.remove());
+            
+            // 创建试次容器
+            const trial = document.createElement('div');
+            trial.id = `trial-${index}`;
+            trial.className = 'trial-item';
+            trial.dataset.trialIndex = index;
+            trial.dataset.playCount = 0;
+            
+            // 获取当前音频文件
+            const file = config.audioFiles[index];
+            const isSpecialAudio = file.includes(config.specialAudioKeyword);
+            trial.dataset.isSpecialAudio = isSpecialAudio? "true" : "false";
+            
+            // 试次标题
+            const title = document.createElement('h2');
+            title.innerHTML = `试次 <span class="trial-number">${index + 1}</span>/<span class="total-trials">${config.audioFiles.length}</span>`;
+            trial.appendChild(title);
+            
+            // 音频容器
+            const audioContainer = document.createElement('div');
+            audioContainer.className = 'audio-container';
+            audioContainer.innerHTML = `
+                <p><strong>请聆听以下音频：</strong></p>
+                <audio controls class="experiment-audio">您的浏览器不支持音频播放</audio>
+                <p class="audio-status">等待音频加载完成并自动播放...</p>
+                <button class="btn replay-btn" disabled>再播放一次</button>
+            `;
+            trial.appendChild(audioContainer);
+            const audioElement = audioContainer.querySelector('audio');
+            audioElement.src = file;
+            audioElement.dataset.filename = file.split('/').pop();
+            audioElement.onloadedmetadata = function() { setupAudioPlayback(this); };
+            audioElement.onended = audioEnded;
+            
+            // 问题1：情绪色彩
+            const emotionExtra = `
+                <div class="emotion-ratings" style="display: none; margin-top: 20px;">
+                    <div class="question">请对以下维度进行评分（1-7 表示程度）：</div>
+                    <div class="slider-group">
+                        <p>听起来高兴还是不高兴（1 = 非常不高兴，4 = 中性，7 = 非常高兴）</p>
+                        ${createRadioGroup("valence", 1, 7)}
+                    </div>
+                    <div class="slider-group">
+                        <p>听起来激动还是平静（1 = 非常平静，4 = 中等，7 = 非常激动）</p>
+                        ${createRadioGroup("arousal", 1, 7)}
+                    </div>
+                    <div class="slider-group">
+                        <p>听起来强势还是被动（1 = 非常被动，4 = 中性，7 = 非常强势）</p>
+                        ${createRadioGroup("dominance", 1, 7)}
+                    </div>
+                </div>
+            `;
+            const emotionBlock = createQuestionBlock(
+                "问题1：这段音频听起来是否带有明显的情绪色彩？",
+                ["是", "否"],
+                "emotion-main-btn",
+                emotionExtra
+            );
+            trial.appendChild(emotionBlock);
+            
+            // 问题2：合作竞争倾向
+            const interactionExtra = `
+                <div class="interaction-ratings" style="display: none; margin-top: 20px;">
+                    <div class="question">请对以下维度进行评分（1-7 表示程度）：</div>
+                    <div class="slider-group">
+                        <p>合作倾向（1 = 只有一点倾向，7 = 倾向非常明显）</p>
+                        ${createRadioGroup("cooperation", 1, 7)}
+                    </div>
+                    <div class="slider-group">
+                        <p>竞争倾向（1 = 只有一点倾向，7 = 倾向非常明显）</p>
+                        ${createRadioGroup("competition", 1, 7)}
+                    </div>
+                </div>
+            `;
+            const interactionBlock = createQuestionBlock(
+                "问题2：这段音频听起来是否有明显的合作或竞争倾向",
+                ["是", "否"],
+                "interaction-main-btn",
+                interactionExtra
+            );
+            trial.appendChild(interactionBlock);
+            
+            // 问题3：理解程度
+            const understandExtra = `
+                <div class="understand-ratings" style="display: none; margin-top: 20px;">
+                    <div class="question">理解程度（1 = 只能理解一点，7 = 完全理解）</div>
+                    <div class="slider-group">
+                        ${createRadioGroup("understand_degree", 1, 7)}
+                    </div>
+                </div>
+            `;
+            const understandBlock = createQuestionBlock(
+                "问题3：你能理解这段音频整体想表达的意思吗？",
+                ["是", "否"],
+                "understand-main-btn",
+                understandExtra
+            );
+            trial.appendChild(understandBlock);
+            
+            // 问题4：普通话相似度
+            const mandarinBlock = createQuestionBlock(
+                "问题4：忽略内容，这段音频从听感上有多像汉语普通话？（1 = 完全不像，7 = 非常像）",
+                [],
+                "",
+                `<div class="slider-group">${createRadioGroup("mandarin_similarity", 1, 7)}</div>`
+            );
+            trial.appendChild(mandarinBlock);
+            
+            // 问题5：口音判断（特殊音频）
+            if (isSpecialAudio) {
+                const accentExtra = `
+                    <div class="accent-details" style="display: none; margin-top: 20px;">
+                        <div class="question">偏离普通话的程度（1 = 只有一点偏离，7 = 偏离非常明显）</div>
+                        <div class="slider-group">
+                            ${createRadioGroup("accent_degree", 1, 7)}
+                        </div>
+                    </div>
+                `;
+                const accentBlock = createQuestionBlock(
+                    "问题5：你觉得这段音频的普通话有口音吗？",
+                    ["是", "否"],
+                    "accent-main-btn",
+                    accentExtra
+                );
+                trial.appendChild(accentBlock);
+            }
+            
+            // 问题6：名人判断（特殊音频）
+            if (isSpecialAudio) {
+                const celebrityExtra = `
+                    <div class="celebrity-details" style="display: none; margin-top: 20px;">
+                        <div class="question">请填写以下信息：</div>
+                        <form class="celebrity-form">
+                            <p>该名人的名字：<input type="text" class="celebrity-name"></p>
+                            <p>音频与该名人声音的相似程度（1 = 只有一点像，7 = 非常像）：
+                                ${createRadioGroup("similarity", 1, 7)}
+                            </p>
+                        </form>
+                    </div>
+                `;
+                const celebrityBlock = createQuestionBlock(
+                    "问题6：你觉得这段音频中的说话人像名人吗？",
+                    ["是", "否"],
+                    "celebrity-main-btn",
+                    celebrityExtra
+                );
+                trial.appendChild(celebrityBlock);
+            }
+            
+            // 下一试次按钮
+            const nav = document.createElement('div');
+            nav.className = 'trial-navigation';
+            nav.innerHTML = '<button class="btn next-trial-btn">下一试次</button>';
+            trial.appendChild(nav);
+            
+            // 添加事件监听
+            attachEventListeners(trial);
+            
+            // 添加到容器
+            const trialContainer = document.createElement('div');
+            trialContainer.id = 'trial-container';
+            document.body.appendChild(trialContainer);
+            trialContainer.appendChild(trial);
+            
+            return trial;
+        }
+
+        // 绑定事件监听
+        function attachEventListeners(trial) {
+            // 问题1按钮
+            trial.querySelectorAll('.emotion-main-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const value = this.getAttribute('data-value');
+                    const ratingsDiv = trial.querySelector('.emotion-ratings');
+                    trial.querySelectorAll('.emotion-main-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    trial.dataset.emotionMain = value;
+                    ratingsDiv.style.display = value === '是'? 'block' : 'none';
+                    if (value === '否') {
+                        trial.dataset.valence = 0;
+                        trial.dataset.arousal = 0;
+                        trial.dataset.dominance = 0;
+                    }
+                });
+            });
+
+            // 问题1评分
+            trial.querySelectorAll('input[name="valence"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    trial.dataset.valence = this.value;
+                });
+            });
+            trial.querySelectorAll('input[name="arousal"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    trial.dataset.arousal = this.value;
+                });
+            });
+            trial.querySelectorAll('input[name="dominance"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    trial.dataset.dominance = this.value;
+                });
+            });
+
+            // 问题2按钮
+            trial.querySelectorAll('.interaction-main-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const value = this.getAttribute('data-value');
+                    const ratingsDiv = trial.querySelector('.interaction-ratings');
+                    trial.querySelectorAll('.interaction-main-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    trial.dataset.interactionMain = value;
+                    ratingsDiv.style.display = value === '是'? 'block' : 'none';
+                    if (value === '否') {
+                        trial.dataset.cooperation = 0;
+                        trial.dataset.competition = 0;
+                    }
+                });
+            });
+
+            // 问题2评分
+            trial.querySelectorAll('input[name="cooperation"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    trial.dataset.cooperation = this.value;
+                });
+            });
+            trial.querySelectorAll('input[name="competition"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    trial.dataset.competition = this.value;
+                });
+            });
+
+            // 问题3按钮
+            trial.querySelectorAll('.understand-main-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const value = this.getAttribute('data-value');
+                    const ratingsDiv = trial.querySelector('.understand-ratings');
+                    trial.querySelectorAll('.understand-main-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    trial.dataset.understandMain = value;
+                    ratingsDiv.style.display = value === '是'? 'block' : 'none';
+                    if (value === '否') {
+                        trial.dataset.understandDegree = 0;
+                    }
+                });
+            });
+
+            // 问题3评分
+            trial.querySelectorAll('input[name="understand_degree"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    trial.dataset.understandDegree = this.value;
+                });
+            });
+
+            // 问题4评分
+            trial.querySelectorAll('input[name="mandarin_similarity"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    trial.dataset.mandarinSimilarity = this.value;
+                });
+            });
+
+            // 问题5按钮（特殊音频）
+            if (trial.dataset.isSpecialAudio === "true") {
+                trial.querySelectorAll('.accent-main-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const value = this.getAttribute('data-value');
+                        const detailsDiv = trial.querySelector('.accent-details');
+                        trial.querySelectorAll('.accent-main-btn').forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        trial.dataset.accentMain = value;
+                        detailsDiv.style.display = value === '是'? 'block' : 'none';
+                        if (value === '否') {
+                            trial.dataset.accentDegree = 0;
+                        }
+                    });
+                });
+                
+                // 问题5评分
+                trial.querySelectorAll('input[name="accent_degree"]').forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        trial.dataset.accentDegree = this.value;
+                    });
+                });
+            }
+
+            // 问题6按钮（特殊音频）
+            if (trial.dataset.isSpecialAudio === "true") {
+                trial.querySelectorAll('.celebrity-main-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const value = this.getAttribute('data-value');
+                        const detailsDiv = trial.querySelector('.celebrity-details');
+                        trial.querySelectorAll('.celebrity-main-btn').forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        trial.dataset.celebrityMain = value;
+                        detailsDiv.style.display = value === '是'? 'block' : 'none';
+                        if (value === '否') {
+                            trial.dataset.celebrityName = '';
+                            trial.dataset.celebritySimilarity = 0;
+                        }
+                    });
+                });
+                
+                // 名人信息输入
+                trial.querySelector('.celebrity-name').addEventListener('input', function() {
+                    trial.dataset.celebrityName = this.value;
+                });
+                trial.querySelectorAll('input[name="similarity"]').forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        trial.dataset.celebritySimilarity = this.value;
+                    });
+                });
+            }
+
+            // 下一试次按钮
+            trial.querySelector('.next-trial-btn').addEventListener('click', function() {
+                if (!validateTrialAnswers(trial)) {
+                    alert('请完成所有问题的回答后再提交');
+                    return;
+                }
+
+                const currentIndex = config.currentTrial;
+                config.currentTrial++;
+                saveTrialData(trial);
+
+                if (config.currentTrial < config.audioFiles.length) {
+                    showTrial(config.currentTrial);
+                } else {
+                    showFinish();
+                }
+            });
+
+            // 重新播放按钮
+            trial.querySelector('.replay-btn').addEventListener('click', function() {
+                replayAudio(trial);
+            });
+        }
+
+        // 显示试次
+        function showTrial(index) {
+            // 删除旧容器
+            const oldContainer = document.getElementById('trial-container');
+            if (oldContainer) oldContainer.remove();
+            
+            // 创建新试次
+            const trial = createTrials(index);
+            
+            // 显示试次
+            setTimeout(() => {
+                if (!trial) {
+                    alert(`无法加载试次 ${index + 1}，请刷新页面`);
+                    return;
+                }
+                trial.classList.add('active');
+                window.scrollTo(0, 0);
+
+                // 记录开始时间
+                const startTime = new Date().toISOString();
+                trial.dataset.startTime = startTime;
+                
+                // 自动播放音频
+                const audioElement = trial.querySelector('audio');
+                const replayBtn = trial.querySelector('.replay-btn');
+                const audioStatus = trial.querySelector('.audio-status');
+                
+                trial.dataset.playCount = 0;
+                replayBtn.disabled = true;
+                audioStatus.textContent = "正在播放音频...";
+                
+                audioElement.load();
+                setTimeout(() => {
+                    const playPromise = audioElement.play();
+                    if (playPromise!== undefined) {
+                        playPromise.then(() => {
+                            trial.dataset.playCount = "1";
+                        }).catch(error => {
+                            audioStatus.textContent = "请点击播放按钮聆听音频";
+                            replayBtn.disabled = false;
+                        });
+                    }
+                }, 300);
+            }, 100);
+        }
+
+        // 开始实验
+        function startExperiment() {
+            const name = document.getElementById('participant_name').value.trim();
+            const id = document.getElementById('participant_id').value.trim();
+            
+            if (!name ||!id) {
+                document.getElementById('info-error').style.display = 'block';
+                return;
+            }
+            
+            config.participantName = name;
+            config.participantId = id;
+
+            const savedData = localStorage.getItem(`experiment_${id}`);
+            if (savedData) {
+                const parsedData = JSON.parse(savedData);
+                config.audioFiles = parsedData.audioOrder;
+                config.currentTrial = parsedData.currentTrial;
+                config.experimentData = parsedData.experimentData;
+
+                const userChoice = confirm(
+                    `检测到未完成数据（已完成 ${parsedData.experimentData.length}/${config.audioFiles.length} 试次）\n` +
+                    "【确定】= 继续剩余试次 | 【取消】= 结束并下载已完成数据"
+                );
+
+                if (!userChoice) {
+                    document.getElementById('intro').classList.remove('active');
+                    showFinish();
+                    return;
+                }
+            }
+
+            document.getElementById('intro').classList.remove('active');
+            document.getElementById('welcome').classList.add('active');
+        }
+
+        // 初始化试次
+        function initTrials() {
+            const savedData = localStorage.getItem(`experiment_${config.participantId}`);
+
+            if (savedData) {
+                const parsedData = JSON.parse(savedData);
+                config.audioFiles = parsedData.audioOrder;
+            } else {
+                shuffleArray(config.audioFiles);
+            }
+            document.getElementById('welcome').classList.remove('active');
+            showTrial(config.currentTrial || 0);
+        }
+
+        // 洗牌算法
+        function shuffleArray(array) {
+            if (!Array.isArray(array)) {
+                console.error('shuffleArray需要传入数组');
+                return array;
+            }
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // 音频播放结束
+        function audioEnded() {
+            const activeTrial = document.querySelector('.trial-item.active');
+            if (activeTrial) {
+                const playCount = parseInt(activeTrial.dataset.playCount);
+                const replayBtn = activeTrial.querySelector('.replay-btn');
+                const audioStatus = activeTrial.querySelector('.audio-status');
+                
+                if (playCount < 2) {
+                    audioStatus.textContent = "音频播放完毕，可点击下方按钮再播放一次";
+                    replayBtn.disabled = false;
+                } else {
+                    audioStatus.textContent = "音频已播放两次（最多播放次数）";
+                    replayBtn.disabled = true;
+                }
+            }
+        }
+
+        // 重新播放音频
+        function replayAudio(trial) {
+            const playCount = parseInt(trial.dataset.playCount);
+            const audioElement = trial.querySelector('audio');
+            const replayBtn = trial.querySelector('.replay-btn');
+            const audioStatus = trial.querySelector('.audio-status');
+            
+            if (playCount < 2) {
+                audioElement.currentTime = 0;
+                audioElement.play();
+                audioStatus.textContent = "正在播放音频...";
+                replayBtn.disabled = true;
+                trial.dataset.playCount = (playCount + 1).toString();
+            } else {
+                audioStatus.textContent = "最多只能播放两次";
+            }
+        }
+
+        // 音频播放设置
+        function setupAudioPlayback(audioElement) {
+            const trial = audioElement.closest('.trial-item');
+            if (trial) {
+                audioElement.addEventListener('play', function() {
+                    const currentCount = parseInt(trial.dataset.playCount) || 0;
+                    if (currentCount < 2) {
+                        trial.dataset.playCount = (currentCount + 1).toString();
+                    }
+                });
+            }
+        }
+
+        // 验证答案
+        function validateTrialAnswers(trial) {
+            // 问题1
+            if (!trial.dataset.emotionMain) return false;
+            if (trial.dataset.emotionMain === '是') {
+                if (!trial.dataset.valence ||!trial.dataset.arousal ||!trial.dataset.dominance) {
+                    return false;
+                }
+            }
+            
+            // 问题2
+            if (!trial.dataset.interactionMain) return false;
+            if (trial.dataset.interactionMain === '是') {
+                if (!trial.dataset.cooperation ||!trial.dataset.competition) {
+                    return false;
+                }
+            }
+
+            // 问题3
+            if (!trial.dataset.understandMain) return false;
+            if (trial.dataset.understandMain === '是') {
+                if (!trial.dataset.understandDegree) return false;
+            }
+
+            // 问题4
+            if (!trial.dataset.mandarinSimilarity) return false;
+            
+            // 问题5（特殊音频）
+            const isSpecialAudio = trial.dataset.isSpecialAudio === "true";
+            if (isSpecialAudio) {
+                if (!trial.dataset.accentMain) return false;
+                if (trial.dataset.accentMain === '是' &&!trial.dataset.accentDegree) {
+                    return false;
+                }
+            }
+            
+            // 问题6（特殊音频）
+            if (isSpecialAudio) {
+                if (!trial.dataset.celebrityMain) return false;
+                if (trial.dataset.celebrityMain === '是') {
+                    const name = trial.dataset.celebrityName || '';
+                    const similarity = trial.dataset.celebritySimilarity || '';
+                    if (!name ||!similarity) return false;
+                }
+            }
+
+            return true;
+        }
+
+        // 保存试次数据
+        function saveTrialData(trial) {
+            const trialIndex = parseInt(trial.dataset.trialIndex);
+            const audioFilename = trial.querySelector('audio').dataset.filename;
+            const startTime = trial.dataset.startTime;
+            const endTime = new Date().toISOString();
+            const isSpecialAudio = trial.dataset.isSpecialAudio === "true";
+            
+            const startTimestamp = new Date(startTime).getTime();
+            const endTimestamp = new Date(endTime).getTime();
+            const duration = endTimestamp - startTimestamp;
+
+            const trialData = {
+                participant_name: config.participantName,
+                participant_id: config.participantId,
+                trial_number: trialIndex + 1,
+                audio_filename: audioFilename,
+                start_time: startTime,
+                end_time: endTime,
+                duration_ms: duration,
+                emotion_main: trial.dataset.emotionMain || '',
+                valence: trial.dataset.valence || 0,
+                arousal: trial.dataset.arousal || 0,
+                dominance: trial.dataset.dominance || 0,
+                interaction_main: trial.dataset.interactionMain || '',
+                cooperation: trial.dataset.cooperation || 0,
+                competition: trial.dataset.competition || 0,
+                understand_main: trial.dataset.understandMain || '',
+                understand_degree: trial.dataset.understandDegree || 0,
+                mandarin_similarity: trial.dataset.mandarinSimilarity || 0,
+                accent_main: isSpecialAudio? (trial.dataset.accentMain || '') : null,
+                accent_degree: isSpecialAudio? (trial.dataset.accentDegree || 0) : null,
+                play_count: trial.dataset.playCount || 0,
+                celebrity_main: isSpecialAudio? (trial.dataset.celebrityMain || '') : null,
+                celebrity_name: isSpecialAudio? (trial.dataset.celebrityName || '') : null,
+                celebrity_similarity: isSpecialAudio? (trial.dataset.celebritySimilarity || 0) : null                
+            };
+            
+            config.experimentData.push(trialData);
+            saveToLocalStorage();
+        }
+
+        // 保存到本地存储
+        function saveToLocalStorage() {
+            const saveData = {
+                participantName: config.participantName,
+                participantId: config.participantId,
+                currentTrial: config.currentTrial,
+                experimentData: config.experimentData,
+                lastSavedTime: new Date().toISOString(),
+                audioOrder: config.audioFiles
+            };
+            localStorage.setItem(`experiment_${config.participantId}`, JSON.stringify(saveData));
+        }
+
+        // 显示结束页面
+        function showFinish() {
+            document.querySelectorAll('.trial, trial-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.getElementById('finish').classList.add('active');
+        }
+
+        // 下载CSV数据
+        function downloadCSV() {
+            const BOM = "\uFEFF";
+            
+            const headers = [
+                '被试姓名',
+                '被试ID',
+                '试次编号',
+                '音频文件名',
+                '试次开始时间',
+                '试次提交时间',
+                '耗时(毫秒)',
+                '播放次数',
+                '感情色彩判断',
+                'Valence评分',
+                'Arousal评分',
+                'Dominance评分',
+                '互动倾向判断',
+                '合作倾向评分',
+                '竞争倾向评分',
+                '理解程度判断',
+                '理解程度评分',
+                '普通话自然度评分',
+                '口音判断',
+                '口音偏离程度评分',
+                '名人相似度判断',
+                '名人名字',
+                '名人相似度评分'
+            ];
+            
+            let csvContent = BOM + headers.join(',') + '\n';
+            
+            config.experimentData.forEach(data => {
+                const escapeChar = (value) => {
+                    if (value === null) return '';
+                    if (!value) return '';
+                    let escaped = value.toString().replace(/"/g, '""');
+                    escaped = escaped.replace(/\r?\n/g, '');
+                    if (escaped.includes(',') || escaped.includes(' ') || /[^\x20-\x7E]/.test(escaped)) {
+                        escaped = `"${escaped}"`;
+                    }
+                    return escaped;
+                };
+                
+                const row = [
+                    escapeChar(data.participant_name),
+                    escapeChar(data.participant_id),
+                    data.trial_number,
+                    escapeChar(data.audio_filename),
+                    escapeChar(data.start_time),
+                    escapeChar(data.end_time),
+                    data.duration_ms,
+                    data.play_count,
+                    escapeChar(data.emotion_main),
+                    data.valence,
+                    data.arousal,
+                    data.dominance,
+                    escapeChar(data.interaction_main),
+                    data.cooperation,
+                    data.competition,
+                    escapeChar(data.understand_main),
+                    data.understand_degree,
+                    data.mandarin_similarity,
+                    escapeChar(data.accent_main),
+                    data.accent_degree,
+                    escapeChar(data.celebrity_main),
+                    escapeChar(data.celebrity_name),
+                    data.celebrity_similarity,
+                ];
+                csvContent += row.join(',') + '\n';
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            const date = new Date();
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            const fileName = `${config.participantName}_${config.participantId}_word_${dateStr}.csv`;
+            link.setAttribute('download', fileName);
+
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            document.getElementById('results').innerHTML = '<p>数据已成功下载！本地缓存已清除。</p>';
+            localStorage.removeItem(`experiment_${config.participantId}`);
+        }
+    </script>
+</body>
+</html>
+
